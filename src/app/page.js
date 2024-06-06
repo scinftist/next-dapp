@@ -13,7 +13,7 @@ export default function Home() {
   const [userProvider, setUserProvider] = useState();
   const [numberOfTicket, setNumberOfTicket] = useState(0);
 
-  const contractAddress = "0x00000";
+  const contractAddress = "0x9604D9dbeA6c72B50A2c808d84FF51Ce9764Ca0C";
 
   async function connect() {
     if (isConnected == false) {
@@ -28,6 +28,11 @@ export default function Home() {
           const add = await sign.getAddress();
 
           setUserProvider(await connectedProvider.getNetwork());
+          console.log(`connected provider ${connectedProvider}`);
+          console.log(
+            `connected provider ${await connectedProvider.getBalance}`
+          );
+
           console.log(` ${userProvider}`);
           const rpcUrl = window.ethereum.rpcUrls
             ? window.ethereum.rpcUrls[0]
@@ -53,8 +58,22 @@ export default function Home() {
   const decrementValue = () => {
     setNumberOfTicket(numberOfTicket - 1);
   };
-  const exec = () => {
+  const exec = async () => {
     console.log(`exec`);
+    if (!signer) {
+      console.log("Please connect your wallet first.");
+      return;
+    }
+
+    const contract = new ethers.Contract(contractAddress, abi.abi, signer);
+
+    try {
+      const tx = await contract.setNum(`${numberOfTicket}`);
+      await tx.wait(); // Wait for the transaction to be mined
+      console.log("Transaction successful", tx);
+    } catch (e) {
+      console.log("Transaction failed", e);
+    }
   };
 
   return (
@@ -117,7 +136,7 @@ export default function Home() {
           </label>
           <div>
             <button
-              onClick={exec()}
+              onClick={exec}
               disabled={numberOfTicket < 1}
               className="px-4 py-2  bg-blue-500 text-white rounded-md hover:bg-blue-700"
             >
